@@ -7,11 +7,26 @@ class MoviesController < ApplicationController
   end
 
   def index
-    if params[:sort_by]
-      @movies = Movie.find(:all, :order => params[:sort_by])
-    else
-      @movies = Movie.all
+
+    ratings_wanted, sorted_by = params[:ratings], params[:sort_by]
+
+    @all_ratings = Movie.all_ratings.map {|r| r.rating}.uniq
+    @movies = []
+
+    if ratings_wanted
+      fetch_ratings = ratings_wanted.keys
+      fetch_ratings.each do |rating|
+        Movie.where("rating = ?", rating.to_s)
+          .each {|movie| @movies << movie}
+      end
     end
+    
+    @movies = Movie.all if @movies.empty?
+
+    if sorted_by
+      @movies = @movies.sort_by {|movie| movie.send(sorted_by)}
+    end
+
   end
 
   def new
