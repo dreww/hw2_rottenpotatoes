@@ -14,17 +14,24 @@ class MoviesController < ApplicationController
     @movies = []
 
     if ratings_wanted
+      session[:ratings] = ratings_wanted
       fetch_ratings = ratings_wanted.keys
       fetch_ratings.each do |rating|
-        Movie.where("rating = ?", rating.to_s)
-          .each {|movie| @movies << movie}
+        Movie.where("rating = ?", rating.to_s).each {|movie| @movies << movie}
       end
     end
     
     @movies = Movie.all if @movies.empty?
 
     if sorted_by
+      session[:sort_by] = sorted_by
       @movies = @movies.sort_by {|movie| movie.send(sorted_by)}
+    end
+
+    if session[:ratings] != params[:ratings] || session[:sort_by] != params[:sort_by]
+        params[:ratings] ||= session[:ratings]
+        params[:sort_by] ||= session[:sort_by]
+        redirect_to movies_path(params)
     end
 
   end
